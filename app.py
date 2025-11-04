@@ -1,42 +1,38 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, request, jsonify, render_template
+from openai import OpenAI
 import os
-import openai
 
 app = Flask(__name__)
 
-# ✅ OpenAI API anahtarı (Render’da Environment’a ekleyeceksin)
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# OpenAI istemcisini başlat
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-@app.route('/')
+@app.route("/")
 def index():
     return render_template("index.html")
 
-@app.route('/ai', methods=['POST'])
-def ai_response():
+@app.route("/chat", methods=["POST"])
+def chat():
+    data = request.get_json()
+    message = data.get("message", "")
+
     try:
-        data = request.get_json()
-        user_message = data.get("message", "")
-        if not user_message:
-            return jsonify({"response": "Lütfen bir arıza veya sorun yaz."})
-
-        # 🔹 Basit yapay zekâ yanıtı
-        prompt = f"Sen bir fabrika bakım asistanısın. Şu soruna çözüm önerisi ver:\n\n{user_message}"
-
-        completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+        # Yeni OpenAI API sistemi
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",  # gerekirse "gpt-4o" da kullanabilirsin
             messages=[
-                {"role": "system", "content": "Sen endüstriyel bakım uzmanısın."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.7
+                {"role": "system", "content": "Sen bir bakım asistanısın. Makine arızalarını analiz et, çözüm önerileri sun."},
+                {"role": "user", "content": message}
+            ]
         )
 
-        reply = completion.choices[0].message["content"].strip()
-        return jsonify({"response": reply})
+        reply = response.choices[0].message.content
+        return jsonify({"reply": reply})
 
     except Exception as e:
-        return jsonify({"response": f"Hata oluştu: {e}"})
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    # Render'da otomatik port alır ama lokalde test için 10000 portu açık
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
