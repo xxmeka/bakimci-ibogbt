@@ -1,41 +1,42 @@
 from flask import Flask, render_template, request, jsonify
-from openai import OpenAI
 import os
+import openai
 
 app = Flask(__name__)
 
-# OpenAI istemcisi (Render ortamında API key Environment olarak ayarlanacak)
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# ✅ OpenAI API anahtarı (Render’da Environment’a ekleyeceksin)
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
-@app.route("/")
-def home():
-    return render_template(
-        "index.html",
-        title="Bakımcı İboGBT",
-        message="Makine arızalarında hızlı çözüm ortağınız!"
-    )
+@app.route('/')
+def index():
+    return render_template("index.html")
 
-@app.route("/ai", methods=["POST"])
+@app.route('/ai', methods=['POST'])
 def ai_response():
-    data = request.get_json()
-    prompt = data.get("prompt", "")
-
-    if not prompt:
-        return jsonify({"error": "prompt gerekli"}), 400
-
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "Sen bir makine bakım uzmanısın. Kısa, net ve teknik yanıtlar ver."},
-                {"role": "user", "content": prompt}
-            ]
-        )
-        answer = response.choices[0].message.content
-        return jsonify({"response": answer})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        data = request.get_json()
+        user_message = data.get("message", "")
+        if not user_message:
+            return jsonify({"response": "Lütfen bir arıza veya sorun yaz."})
 
+        # 🔹 Basit yapay zekâ yanıtı
+        prompt = f"Sen bir fabrika bakım asistanısın. Şu soruna çözüm önerisi ver:\n\n{user_message}"
+
+        completion = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "Sen endüstriyel bakım uzmanısın."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7
+        )
+
+        reply = completion.choices[0].message["content"].strip()
+        return jsonify({"response": reply})
+
+    except Exception as e:
+        return jsonify({"response": f"Hata oluştu: {e}"})
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
