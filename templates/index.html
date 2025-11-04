@@ -5,14 +5,16 @@
     <title>Bakımcı İboGBT</title>
     <style>
         body { font-family: Arial; text-align: center; margin-top: 60px; background-color: #f7f7f7; }
-        input, button { padding: 10px; font-size: 16px; }
-        #response { margin-top: 20px; padding: 10px; background: white; display: inline-block; width: 60%; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        input, button { padding: 10px; font-size: 16px; border-radius: 6px; border: 1px solid #ccc; }
+        button { background-color: #007bff; color: white; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        #response { margin-top: 20px; padding: 10px; background: white; display: inline-block; width: 60%; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); white-space: pre-wrap; text-align: left; }
     </style>
 </head>
 <body>
     <h1>👨‍🔧 Bakımcı İboGBT</h1>
     <p>Makine arızasını yaz, çözüm önerilerini anında al!</p>
-    <input type="text" id="userInput" placeholder="Örn: Motor ısınma sorunu">
+    <input type="text" id="userInput" placeholder="Örn: Motor ısınma sorunu" size="40">
     <button onclick="sendMessage()">Gönder</button>
 
     <div id="response"></div>
@@ -20,6 +22,12 @@
     <script>
         async function sendMessage() {
             const message = document.getElementById("userInput").value;
+            if (!message.trim()) {
+                document.getElementById("response").innerText = "⚠️ Lütfen bir arıza yaz.";
+                return;
+            }
+
+            document.getElementById("response").innerText = "🔄 Düşünüyor...";
             const res = await fetch("/ai", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
