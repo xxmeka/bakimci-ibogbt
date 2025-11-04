@@ -3,10 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <title>Bakımcı İboGBT</title>
+    <style>
+        body { font-family: Arial; text-align: center; margin-top: 60px; background-color: #f7f7f7; }
+        input, button { padding: 10px; font-size: 16px; }
+        #response { margin-top: 20px; padding: 10px; background: white; display: inline-block; width: 60%; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    </style>
 </head>
-<body style="font-family: Arial; text-align:center; margin-top: 50px;">
-    <h1>🤖 Bakımcı İboGBT</h1>
-    <p>{{ message }}</p>
-    <p>Makine arızalarını kolayca tanımla, çözüm önerilerini anında al!</p>
+<body>
+    <h1>👨‍🔧 Bakımcı İboGBT</h1>
+    <p>Makine arızasını yaz, çözüm önerilerini anında al!</p>
+    <input type="text" id="userInput" placeholder="Örn: Motor ısınma sorunu">
+    <button onclick="sendMessage()">Gönder</button>
+
+    <div id="response"></div>
+
+    <script>
+        async function sendMessage() {
+            const message = document.getElementById("userInput").value;
+            const res = await fetch("/ai", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message })
+            });
+            const data = await res.json();
+            document.getElementById("response").innerText = data.response;
+        }
+    </script>
 </body>
 </html>
